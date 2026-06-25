@@ -1,21 +1,103 @@
-// CalculatorTutorial.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include <vector>
 #include <fstream>
-int main()
-{
-    std::cout << "Hello World!\n";
+
+// Function to save the integer database to a file
+void saveDatabase(const std::string& filename, const std::vector<int>& db) {
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        for (int num : db) {
+            outFile << num << "\n";
+        }
+        std::cout << "Database saved successfully!\n";
+    }
+    else {
+        std::cerr << "Error opening file for writing.\n";
+    }
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
 
-// Tips for Getting Started:
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+// Function to load the integer database from a file
+void loadDatabase(const std::string& filename, std::vector<int>& db) {
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        db.clear();
+        int num;
+        while (inFile >> num) {
+            db.push_back(num);
+        }
+        std::cout << "Database loaded successfully!\n";
+    }
+    else {
+        std::cout << "No existing database found. Starting fresh.\n";
+    }
+}
+
+// Function to display the database
+void showDatabase(const std::vector<int>& db) {
+    if (db.empty()) {
+        std::cout << "The database is currently empty.\n";
+    }
+    else {
+        std::cout << "Database contents: ";
+        for (int num : db) {
+            std::cout << num << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
+int main() {
+    std::vector<int> database;
+    std::string dbFile = "int_database.txt";
+
+    // Load existing data on startup
+    loadDatabase(dbFile, database);
+
+    int choice = 0;
+    while (choice != 5) {
+        std::cout << "\n--- Integer Database Menu ---\n"
+            << "1. Show Database\n"
+            << "2. Add Integer\n"
+            << "3. Save Database\n"
+            << "4. Clear Database\n"
+            << "5. Exit\n"
+            << "Enter your choice (1-5): ";
+
+        if (!(std::cin >> choice)) {
+            std::cout << "Invalid input. Please enter a number.\n";
+            std::cin.clear();
+            std::cin.ignore(1000, '\n');
+            continue;
+        }
+
+        switch (choice) {
+        case 1:
+            showDatabase(database);
+            break;
+        case 2: {
+            int inputNum;
+            std::cout << "Enter an integer to add: ";
+            if (std::cin >> inputNum) {
+                database.push_back(inputNum);
+                std::cout << "Integer added.\n";
+            }
+            break;
+        }
+        case 3:
+            saveDatabase(dbFile, database);
+            break;
+        case 4:
+            database.clear();
+            std::cout << "Database cleared from memory.\n";
+            break;
+        case 5:
+            std::cout << "Exiting program. Goodbye!\n";
+            break;
+        default:
+            std::cout << "Invalid choice. Please pick between 1 and 5.\n";
+        }
+    }
+
+    return 0;
+}
