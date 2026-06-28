@@ -74,13 +74,18 @@ void listDatabase(const std::filesystem::path& filepath) {
 }
 
 
-void deleteDatabase(const std::string& filename) {
-	if (std::remove(filename.c_str()) == 0) {
-		std::cout << "Database file deleted successfully.\n";
-	}
-	else {
-		std::cerr << "Error deleting database file.\n";
-	}
+void deleteDatabase(const std::filesystem::path& filepath) {
+    try {
+        if (fs::remove(filepath)) {
+            std::cout << "Database file deleted successfully.\n";
+        }
+        else {
+            std::cerr << "Database file does not exist or could not be deleted.\n";
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error deleting database file: " << e.what() << "\n";
+    }
 }
 
 void createDatabase(const std::filesystem::path& filepath) {
@@ -112,6 +117,7 @@ int main() {
     // database manager
 
     int mainmenu_choice = 0;
+	int db_choice = 0;
     while (mainmenu_choice != 5) {
         std::cout << "\n--- Integer Database Menu ---\n"
             << "1. List Database\n"
@@ -158,6 +164,7 @@ int main() {
                 loadDatabase(fileToOpen.string(), database);
                 activeDatabaseFile = fileToOpen;
                 hasOpenDatabase = true;
+
             }
             else {
                 std::cout << "Database does not exist.\n";
@@ -165,56 +172,67 @@ int main() {
 
             break;
         }
-        case 4:
-            database.clear();
-            std::cout << "Database cleared from memory.\n";
+        case 4: {
+            std::string name;
+            std::cout << "Enter database name to delete: ";
+            std::cin >> name;
+
+            fs::path fileToDelete = dbPath / name;
+
+            deleteDatabase(fileToDelete);
+
             break;
+        }
         case 5:
             std::cout << "Exiting program. Goodbye!\n";
             break; 
 
-    //int choice = 0;
-    //while (choice != 5) {
-    //    std::cout << "\n--- Integer Database Menu ---\n"
-    //        << "1. Show Database\n"
-    //        << "2. Add Integer\n"
-    //        << "3. Save Database\n"
-    //        << "4. Clear Database\n"
-    //        << "5. Exit\n"
-    //        << "Enter your choice (1-5): ";
-
-    //    if (!(std::cin >> choice)) {
-    //        std::cout << "Invalid input. Please enter a number.\n";
-    //        std::cin.clear();
-    //        std::cin.ignore(1000, '\n');
-    //        continue;
-    //    }
-
-    //    switch (choice) {
-    //    case 1:
-    //        showDatabase(database);
-    //        break;
-    //    case 2: {
-    //        int inputNum;
-    //        std::cout << "Enter an integer to add: ";
-    //        if (std::cin >> inputNum) {
-    //            database.push_back(inputNum);
-    //            std::cout << "Integer added.\n";
-    //        }
-    //        break;
-    //    }
-    //    case 3:
-    //        saveDatabase(dbFile, database);
-    //        break;
-    //    case 4:
-    //        database.clear();
-    //        std::cout << "Database cleared from memory.\n";
-    //        break;
-    //    case 5:
-    //        std::cout << "Exiting program. Goodbye!\n";
-    //        break;
+        
         default:
             std::cout << "Invalid choice. Please pick between 1 and 5.\n";
+        }
+
+        while (hasOpenDatabase) {
+
+            std::cout << "\n--- Integer Database Menu: " << activeDatabaseFile.filename() << " ---\n"
+                << "1. Show Database\n"
+                << "2. Add Integer\n"
+                << "3. Save Database\n"
+                << "4. Clear Database\n"
+                << "5. Close Database\n"
+                << "Enter your choice (1-5): ";
+
+            if (!(std::cin >> db_choice)) {
+                std::cout << "Invalid input. Please enter a number.\n";
+                std::cin.clear();
+                std::cin.ignore(1000, '\n');
+                continue;
+            }
+
+            switch (db_choice) {
+            case 1:
+                showDatabase(database);
+                break;
+            case 2: {
+                int inputNum;
+                std::cout << "Enter an integer to add: ";
+                if (std::cin >> inputNum) {
+                    database.push_back(inputNum);
+                    std::cout << "Integer added.\n";
+                }
+                break;
+            }
+            case 3:
+                saveDatabase(activeDatabaseFile.string(), database);
+                break;
+            case 4:
+				database.clear();
+                std::cout << "Database cleared from memory.\n";
+                break;
+            case 5:
+                hasOpenDatabase = false;
+                break;
+            }
         }
     }
 
