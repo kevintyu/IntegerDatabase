@@ -83,20 +83,39 @@ void deleteDatabase(const std::string& filename) {
 	}
 }
 
+void createDatabase(const std::filesystem::path& filepath) {
+    try {
+        if (!fs::exists(filepath)) {
+            std::ofstream outfile(filepath);
+            std::cout << "Database file created successfully.\n";
+        }
+        else {
+            std::cout << "Database file already exists.\n";
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error occurred while creating database file: " << e.what() << "\n";
+    }
+}
+
 int main() {
     std::vector<int> database;
-	fs::path dbPath = "./database_list";
-    std::string dbFile = "int_database.txt";
+    fs::path dbPath = "./database_list";
+    fs::path activeDatabaseFile;
+    bool hasOpenDatabase = false;
 
-    // Load existing data on startup
-    loadDatabase(dbFile, database);
+    if (!fs::exists(dbPath)) {
+        fs::create_directory(dbPath);
+    }
+    
+    
     // database manager
 
     int mainmenu_choice = 0;
     while (mainmenu_choice != 5) {
         std::cout << "\n--- Integer Database Menu ---\n"
             << "1. List Database\n"
-            << "2. Create Integer\n"
+            << "2. Create Database\n"
             << "3. Open Database\n"
             << "4. Delete Database\n"
             << "5. Exit\n"  
@@ -114,17 +133,38 @@ int main() {
             listDatabase(dbPath);
             break;
         case 2: {
-            int inputNum;
-            std::cout << "Enter an integer to add: ";
-            if (std::cin >> inputNum) {
-                database.push_back(inputNum);
-                std::cout << "Integer added.\n";
-            }
+            std::string name;
+            std::cout << "Enter new database name: ";
+            std::cin >> name;
+
+            fs::path newDatabaseFile = dbPath / name;
+
+            createDatabase(newDatabaseFile);
+
+            database.clear();
+            activeDatabaseFile = newDatabaseFile;
+            hasOpenDatabase = true;
+
             break;
         }
-        case 3:
-            saveDatabase(dbFile, database);
+        case 3: {
+            std::string name;
+            std::cout << "Enter database name to open: ";
+            std::cin >> name;
+
+            fs::path fileToOpen = dbPath / name;
+
+            if (fs::exists(fileToOpen)) {
+                loadDatabase(fileToOpen.string(), database);
+                activeDatabaseFile = fileToOpen;
+                hasOpenDatabase = true;
+            }
+            else {
+                std::cout << "Database does not exist.\n";
+            }
+
             break;
+        }
         case 4:
             database.clear();
             std::cout << "Database cleared from memory.\n";
